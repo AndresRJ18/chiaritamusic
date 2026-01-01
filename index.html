@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para ti ✨</title>
+    <style>
+        /* ESTILOS VISUALES */
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%);
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* TARJETA CENTRAL */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 350px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* LA FOTO */
+        .photo-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            position: relative;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+
+        /* BOTÓN INTERACTIVO */
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border: none;
+            padding: 12px 24px;
+            color: white;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            font-weight: bold;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Indicador de música */
+        .music-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @media (max-width: 400px) {
+            .card { padding: 20px; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="cancion.mp3" type="audio/mpeg">
+    </audio>
+
+    <canvas id="fireworks"></canvas>
+
+    <div class="card" id="mainCard">
+        <div class="photo-container">
+            <img src="https://i.postimg.cc/y8r02TF8/linda.jpg" alt="Foto especial">
+        </div>
+        
+        <h1>¡Feliz Año Nuevo! ✨</h1>
+        
+        <p>
+            Dicen que las mejores cosas llegan cuando menos las esperas. 
+            Gracias por este tiempo tan bonito y por esa conexión que 
+            parece de toda la vida. Que este 2026 nos regale muchos más momentos juntos.
+            <br><br>
+            <strong>¡Te quiero mucho!</strong>
+        </p>
+
+        <button class="btn" onclick="celebrate()">¡Pide un deseo!</button>
+    </div>
+    
+    <div class="music-hint" id="musicHint">🎵 Toca la pantalla para escuchar 🎵</div>
+
+    <script>
+        // --- CONTROL DE MÚSICA ---
+        const audio = document.getElementById('bgMusic');
+        const hint = document.getElementById('musicHint');
+        
+        // Intentar reproducir al primer toque en cualquier parte
+        document.body.addEventListener('click', function() {
+            if (audio.paused) {
+                audio.play();
+                audio.volume = 0.5; // Volumen al 50%
+                hint.style.opacity = 0; // Ocultar el texto de ayuda
+            }
+        }, { once: true }); // Solo se ejecuta una vez
+
+        // --- FUEGOS ARTIFICIALES ---
+        const canvas = document.getElementById('fireworks');
+        const ctx = canvas.getContext('2d');
+        let fireworks = [];
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function random(min, max) { return Math.random() * (max - min) + min; }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                this.velocity = { x: random(-5, 5), y: random(-5, 5) };
+                this.alpha = 1; this.friction = 0.95;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.01;
+            }
+        }
+
+        class Firework {
+            constructor(x, y) {
+                this.x = x; this.y = canvas.height;
+                this.targetY = y;
+                this.color = `hsl(${random(0, 360)}, 100%, 50%)`;
+                this.velocity = { x: 0, y: -random(10, 15) };
+            }
+            draw() {
+                ctx.globalAlpha = 1;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                this.y += this.velocity.y;
+                if (this.y <= this.targetY) {
+                    this.explode();
+                    return false; // Remove firework
+                }
+                return true; // Keep firework
+            }
+            explode() {
+                for (let i = 0; i < 50; i++) {
+                    particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (Math.random() < 0.05) {
+                fireworks.push(new Firework(random(0, canvas.width), random(0, canvas.height / 2)));
+            }
+
+            fireworks = fireworks.filter(f => {
+                f.draw();
+                return f.update();
+            });
+
+            particles = particles.filter(p => {
+                p.draw();
+                p.update();
+                return p.alpha > 0;
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function celebrate() {
+            // Asegurar que la música suene si le da al botón directamente
+            if (audio.paused) { audio.play(); hint.style.opacity = 0; }
+
+            for(let i=0; i<10; i++) {
+                setTimeout(() => {
+                    fireworks.push(new Firework(random(0, canvas.width), random(0, canvas.height / 2)));
+                }, i * 200);
+            }
+            
+            const btn = document.querySelector('.btn');
+            btn.innerText = "✨ ¡Hecho! ✨";
+            btn.style.background = "linear-gradient(45deg, #4CAF50, #8BC34A)";
+        }
+    </script>
+</body>
+</html>
